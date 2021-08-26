@@ -1,0 +1,3 @@
+mod web;
+
+fn main() {}

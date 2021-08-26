@@ -1,0 +1,10 @@
+[package]
+name = "bevy-playground"
+version = "0.1.0"
+edition = "2018"
+
+[dependencies]
+axum = { version = "0.3", features = ["headers"] }
+hyper = { version = "0.14", features = [] }
+tokio = { version = "1.10", features = ["full"] }
+
