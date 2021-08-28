@@ -1,3 +1,9 @@
+declare const wasm_bindgen;
+
+// import * as monaco from 'monaco-editor/esm/vs/editor/editor.main.js';
+import * as monaco from "monaco-editor";
+
+
 const BASE_URL = "http://localhost:3000/api"
 const DEFAULT_MAIN_RS = `use bevy::prelude::*;
 
@@ -69,7 +75,7 @@ async function loadApp(id) {
 }
 
 async function compile() {
-    const source = DEFAULT_MAIN_RS;
+    const source = editor.getModel().getValue();
     const id = await fetch(`${BASE_URL}/compile`, { method: "POST", body: source })
         .then(throwOnNon200);
 
@@ -84,5 +90,13 @@ async function throwOnNon200(response) {
     }
     return await response.text();
 }
+
+const editorElement = document.getElementById('editor');
+let editor = monaco.editor.create(editorElement, {
+	value: DEFAULT_MAIN_RS,
+    language: 'rust',
+    theme: "vs-dark",
+});
+
 
 window.compile = compile;

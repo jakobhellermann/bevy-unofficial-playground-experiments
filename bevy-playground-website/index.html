@@ -9,13 +9,19 @@
 
     <link rel="stylesheet" href="style.css">
 
-    <script type="module" src="./src/main.js"></script>
+    <script type="module" src="./src/main.ts"></script>
 </head>
 
 <body>
+
+    <div id="controls">
+        <div id="editor"></div>
+        <div id="messages">
+        </div>
+    </div>
+    <button style="height: 1;" onclick="compile()">Click me</button>
     <div id="container">
-        <button style="height: 1;" onclick="compile()">Click me</button>
-        <canvas id="bevy_canvas" width="400" height="200">canvas>
+        <canvas id="bevy_canvas" width="400" height="200"><canvas>
     </div>
 </body>
 
