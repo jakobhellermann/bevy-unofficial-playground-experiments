@@ -1,0 +1,15 @@
+body {
+    /*
+    padding: 0;
+    margin: 0; 
+    max-width: 100vw;
+    max-height: 100vh;
+    overflow: hidden;
+    */
+    background-color: #191919;
+}
+
+#container {
+    display: flex;
+    flex-direction: column;
+}
