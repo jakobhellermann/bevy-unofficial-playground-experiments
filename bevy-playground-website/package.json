@@ -2,7 +2,6 @@
   "name": "bevy-playground-website",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -10,6 +9,14 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "monaco-editor": "^0.27.0"
+    "@monaco-editor/react": "^4.2.2",
+    "monaco-editor": "^0.27.0",
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2"
+  },
+  "devDependencies": {
+    "@types/react": "^17.0.19",
+    "@types/react-dom": "^17.0.9",
+    "postcss": "^8.3.6"
   }
 }

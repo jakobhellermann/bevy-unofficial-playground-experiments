@@ -1,0 +1,28 @@
+.container {
+    display: flex;
+    flex-direction: column;
+}
+
+
+.controls {
+    display: flex;
+}
+
+.editor {
+    height: 60vh;
+    width: 100%;
+}
+
+.messages {
+    background-color: #292929;
+    width: 60%;
+
+    padding: 1rem;
+
+    display: flex;
+    flex-direction: column;
+}
+
+.messages > code {
+    color: white;
+}
