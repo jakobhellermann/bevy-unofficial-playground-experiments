@@ -41,9 +41,6 @@ export async function compile(source: string, appendLog: (string) => void) {
     const result: CompilationResult = await fetch(`${BASE_URL}/compile`, { method: "POST", body: source })
         .then(throwOnNon200)
         .then(response => response.json())
-
-    console.log(result);
-    
     
     if (result.status === "error") {
         result.msg.split("\n").forEach(appendLog);

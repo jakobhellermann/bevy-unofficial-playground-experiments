@@ -4,6 +4,8 @@ fn main() {
     App::build()
         .insert_resource(WindowDescriptor {
             canvas: Some("#bevy_canvas".to_string()),
+            width: 512.0,
+            height: 268.0,
             ..Default::default()
         })
         .insert_resource(Msaa { samples: 4 })
