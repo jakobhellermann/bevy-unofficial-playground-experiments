@@ -7,7 +7,7 @@ async function throwOnNon200(response) {
     if (!response.ok) {
         throw new Error(await response.text())
     }
-    return await response.text();
+    return response;
 }
 
 function loadScript(url: string) {
@@ -33,13 +33,26 @@ async function loadApp(id: string) {
     wasm_bindgen(wasm);
 }
 
+type CompilationResult = { status: "success", id: string; }
+    | { status: "error", msg: "msg"; };
+
 export async function compile(source: string, appendLog: (string) => void) {
     appendLog("compiling...")
-    const id = await fetch(`${BASE_URL}/compile`, { method: "POST", body: source })
-        .then(throwOnNon200);
+    const result: CompilationResult = await fetch(`${BASE_URL}/compile`, { method: "POST", body: source })
+        .then(throwOnNon200)
+        .then(response => response.json())
+
+    console.log(result);
+    
+    
+    if (result.status === "error") {
+        result.msg.split("\n").forEach(appendLog);
+        return;
+    }
+    
 
     appendLog("loading app...")
-    await loadApp(id);
+    await loadApp(result.id);
 
     appendLog("success")
 }

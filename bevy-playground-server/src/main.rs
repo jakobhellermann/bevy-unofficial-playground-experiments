@@ -8,7 +8,9 @@ use std::{convert::Infallible, net::SocketAddr};
 use axum::error_handling::HandleErrorExt;
 use axum::extract::Path;
 use axum::http::StatusCode;
-use axum::{handler::get, response::IntoResponse, service, Router};
+use axum::Json;
+use axum::{response::IntoResponse, Router};
+use compile::CompilationResult;
 use middleware::cors_middleware;
 use responses::{ErrorResponse, WithContentType};
 use tower_http::{services::ServeDir, trace::TraceLayer};
@@ -16,7 +18,7 @@ use tower_http::{services::ServeDir, trace::TraceLayer};
 #[tokio::main]
 async fn main() {
     if std::env::var("RUST_LOG").is_err() {
-        std::env::set_var("RUST_LOG", "bevy_playground_server=debug,tower_http=debug")
+        std::env::set_var("RUST_LOG", "bevy_playground=debug,tower_http=debug")
     }
     tracing_subscriber::fmt::init();
 
@@ -47,22 +49,19 @@ struct SourceHash(String);
 async fn playground_js(
     hash: Path<SourceHash>,
 ) -> Result<WithContentType<String>, ErrorResponse<compile::Error>> {
-    let js = compile::read_output_js(&hash.0 .0)?;
+    let js = compile::read_output_js(&hash.0 .0).await?;
     Ok(WithContentType::new(js, "application/javascript"))
 }
 async fn playground_wasm(
     hash: Path<String>,
 ) -> Result<WithContentType<Vec<u8>>, ErrorResponse<compile::Error>> {
-    let wasm = compile::read_output_wasm(&hash)?;
+    let wasm = compile::read_output_wasm(&hash).await?;
     Ok(WithContentType::new(wasm, "application/wasm"))
 }
 
-async fn compile(body: String) -> Result<String, ErrorResponse<compile::Error>> {
-    let hash = tokio::task::spawn_blocking(move || compile::compile(&body))
-        .await
-        .unwrap()?;
-
-    Ok(hash)
+async fn compile(body: String) -> Result<Json<CompilationResult>, ErrorResponse<compile::Error>> {
+    let result = compile::compile(&body).await?;
+    Ok(Json(result))
 }
 
 fn internal_server_error(error: impl std::error::Error) -> Result<impl IntoResponse, Infallible> {

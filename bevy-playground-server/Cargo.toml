@@ -9,9 +9,10 @@ tower = "0.4"
 tower-http = { version = "0.1", features = ["fs", "set-header", "trace"] }
 hyper = { version = "0.14", features = [] }
 tokio = { version = "1.10", features = ["full"] }
+serde = { version = "1.0", features = ["derive"] }
 thiserror = "1.0.26"
 tempfile = "3.2.0"
 tracing-subscriber = "0.2.20"
 fnv = "1.0.7"
-serde = "1.0.130"
+tracing = { version = "0.1", features = [] }
 
