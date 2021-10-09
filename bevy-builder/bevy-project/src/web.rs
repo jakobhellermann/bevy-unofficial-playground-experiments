@@ -4,6 +4,7 @@ use crossbeam_channel::Receiver;
 use winit::dpi::LogicalSize;
 
 use bevy::winit::WinitWindows;
+#[allow(dead_code)]
 pub fn web_resize_system(winit_windows: Res<WinitWindows>, web_resizing: Local<WinitWebResizing>) {
     use bevy::window::WindowId;
     let winit_window = winit_windows.get_window(WindowId::primary()).unwrap();
