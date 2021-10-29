@@ -8,12 +8,15 @@ use std::{convert::Infallible, net::SocketAddr};
 use axum::error_handling::HandleErrorExt;
 use axum::extract::Path;
 use axum::http::StatusCode;
+use axum::response::Html;
+use axum::routing::{get, post, service_method_routing as service};
 use axum::Json;
 use axum::{response::IntoResponse, Router};
 use compile::CompilationResult;
 use middleware::cors_middleware;
 use responses::{ErrorResponse, WithContentType};
 use tower_http::{services::ServeDir, trace::TraceLayer};
+use tracing::info;
 
 #[tokio::main]
 async fn main() {
@@ -26,6 +29,7 @@ async fn main() {
         .route("/compile", post(compile))
         .route("/project/:id/playground.js", get(playground_js))
         .route("/project/:id/playground.wasm", get(playground_wasm))
+        .route("/project/:id/playground.html", get(playground_html))
         .layer(cors_middleware());
 
     let serve_dir = service::get(
@@ -38,25 +42,37 @@ async fn main() {
         .layer(TraceLayer::new_for_http());
 
     let addr = SocketAddr::from(([0, 0, 0, 0], 3000));
+    info!("started server on http://localhost:{}", 3000);
     axum::Server::bind(&addr)
         .serve(app.into_make_service())
         .await
         .unwrap();
 }
 
-struct SourceHash(String);
+pub struct SourceHash(String);
+impl std::fmt::Display for SourceHash {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        self.0.fmt(f)
+    }
+}
 
 async fn playground_js(
     hash: Path<SourceHash>,
 ) -> Result<WithContentType<String>, ErrorResponse<compile::Error>> {
-    let js = compile::read_output_js(&hash.0 .0).await?;
+    let js = compile::read_output_js(&hash).await?;
     Ok(WithContentType::new(js, "application/javascript"))
 }
 async fn playground_wasm(
-    hash: Path<String>,
+    hash: Path<SourceHash>,
 ) -> Result<WithContentType<Vec<u8>>, ErrorResponse<compile::Error>> {
     let wasm = compile::read_output_wasm(&hash).await?;
     Ok(WithContentType::new(wasm, "application/wasm"))
+}
+async fn playground_html(
+    hash: Path<SourceHash>,
+) -> Result<Html<String>, ErrorResponse<compile::Error>> {
+    let html = include_str!("../templates/playground.html").replace("{id}", &hash.0 .0);
+    Ok(Html(html))
 }
 
 async fn compile(body: String) -> Result<Json<CompilationResult>, ErrorResponse<compile::Error>> {
