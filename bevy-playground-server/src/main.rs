@@ -1,20 +1,18 @@
-mod middleware;
 mod responses;
 
 mod compile;
 
-use std::{convert::Infallible, net::SocketAddr};
+use std::net::SocketAddr;
 
-use axum::error_handling::HandleErrorExt;
 use axum::extract::Path;
 use axum::http::StatusCode;
 use axum::response::Html;
-use axum::routing::{get, post, service_method_routing as service};
+use axum::routing::{get, get_service, post};
 use axum::Json;
 use axum::{response::IntoResponse, Router};
 use compile::CompilationResult;
-use middleware::cors_middleware;
 use responses::{ErrorResponse, WithContentType};
+use tower_http::cors;
 use tower_http::{services::ServeDir, trace::TraceLayer};
 use tracing::info;
 
@@ -25,16 +23,19 @@ async fn main() {
     }
     tracing_subscriber::fmt::init();
 
+    let cors_layer = cors::CorsLayer::new()
+        .allow_origin(cors::any())
+        .allow_methods(cors::any());
+
     let api_routes = Router::new()
         .route("/compile", post(compile))
         .route("/project/:id/playground.js", get(playground_js))
         .route("/project/:id/playground.wasm", get(playground_wasm))
         .route("/project/:id/playground.html", get(playground_html))
-        .layer(cors_middleware());
+        .layer(cors_layer);
 
-    let serve_dir = service::get(
-        ServeDir::new("../bevy-playground-website/dist").handle_error(internal_server_error),
-    );
+    let serve_dir = get_service(ServeDir::new("../bevy-playground-website/dist"))
+        .handle_error(internal_server_error);
 
     let app = Router::new()
         .nest("/api", api_routes)
@@ -80,11 +81,11 @@ async fn compile(body: String) -> Result<Json<CompilationResult>, ErrorResponse<
     Ok(Json(result))
 }
 
-fn internal_server_error(error: impl std::error::Error) -> Result<impl IntoResponse, Infallible> {
-    Ok((
+async fn internal_server_error(error: std::io::Error) -> impl IntoResponse {
+    (
         StatusCode::INTERNAL_SERVER_ERROR,
         format!("Unhandled internal error: {}", error),
-    ))
+    )
 }
 
 impl<'de> serde::Deserialize<'de> for SourceHash {

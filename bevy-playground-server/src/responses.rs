@@ -1,10 +1,6 @@
-use std::convert::Infallible;
-
 use axum::{
-    body::{Bytes, Full},
     http::HeaderValue,
-    http::Response,
-    response::IntoResponse,
+    response::{IntoResponse, Response},
 };
 
 pub struct WithContentType<R>(R, HeaderValue);
@@ -14,10 +10,7 @@ impl<R> WithContentType<R> {
     }
 }
 impl<R: IntoResponse> IntoResponse for WithContentType<R> {
-    type Body = R::Body;
-    type BodyError = R::BodyError;
-
-    fn into_response(self) -> Response<Self::Body> {
+    fn into_response(self) -> Response {
         let mut response = self.0.into_response();
         response.headers_mut().insert("Content-Type", self.1);
 
@@ -27,10 +20,7 @@ impl<R: IntoResponse> IntoResponse for WithContentType<R> {
 
 pub struct ErrorResponse<E>(pub E);
 impl<E: std::error::Error> IntoResponse for ErrorResponse<E> {
-    type Body = Full<Bytes>;
-    type BodyError = Infallible;
-
-    fn into_response(self) -> Response<Self::Body> {
+    fn into_response(self) -> Response {
         let body = self.0.to_string();
         (axum::http::StatusCode::INTERNAL_SERVER_ERROR, body).into_response()
     }

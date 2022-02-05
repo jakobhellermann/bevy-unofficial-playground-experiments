@@ -4,11 +4,11 @@ version = "0.1.0"
 edition = "2018"
 
 [dependencies]
-axum = { version = "0.3", features = ["headers"] }
+axum = { version = "0.4", features = ["headers"] }
 hyper = { version = "0.14", features = [] }
 tokio = { version = "1.10", features = ["macros", "rt-multi-thread", "process"] }
 tower = "0.4"
-tower-http = { version = "0.1", features = ["fs", "set-header", "trace"] }
+tower-http = { version = "0.2", features = ["fs", "cors", "trace"] }
 
 tracing = "0.1"
 tracing-subscriber = "0.3"
