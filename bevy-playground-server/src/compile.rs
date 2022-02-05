@@ -35,7 +35,9 @@ async fn podman(command: &str, args: &[&OsStr]) -> Result<String, Error> {
 }
 
 async fn create_container(image: &str) -> Result<String, Error> {
-    podman("create", &[image.as_ref()]).await
+    let id = podman("create", &[image.as_ref()]).await?;
+    trace!(?id, "create_container");
+    Ok(id)
 }
 
 async fn cp_from_container(
@@ -69,6 +71,7 @@ async fn write_file_to_container(
 
 async fn rm_container(container_id: &str) -> Result<(), Error> {
     podman("rm", &[container_id.as_ref()]).await?;
+    trace!(id = ?container_id, "removed container");
     Ok(())
 }
 
@@ -86,15 +89,15 @@ pub enum CompilationResult {
 }
 
 pub async fn compile(source: &str) -> Result<CompilationResult, Error> {
-    let span = span!(Level::DEBUG, "compile source");
-    let _enter = span.enter();
-
     let hash = hash_source(source).to_string();
 
+    let span = span!(Level::DEBUG, "compile source", hash = ?hash);
+    let _enter = span.enter();
+
+    tracing::debug!(target: "source = {}", source);
+
     let container_id = create_container(BEVY_BUILDER_CONTAINER).await?;
-    trace!(target: "created container", id = ?container_id);
     write_file_to_container(&container_id, "/project/src/main.rs", source).await?;
-    trace!(parent: &span, container_id = container_id.as_str());
 
     let result = (|| async {
         match start_container_attach(&container_id).await {
@@ -103,20 +106,19 @@ pub async fn compile(source: &str) -> Result<CompilationResult, Error> {
             Err(e) => return Err(e),
         };
 
-        trace!(parent: &span, "compilation finished");
+        trace!("compilation finished");
 
         let dir = std::env::temp_dir().join("bevy-playground").join(&hash);
         tokio::fs::create_dir_all(&dir).await?;
 
         cp_from_container(&container_id, "/project/out/.", dir.as_os_str()).await?;
-        trace!(parent: &span, "wrote files");
+        trace!(dir=?dir, "wrote files");
 
         Ok(CompilationResult::Success { id: hash })
     })()
     .await;
 
     rm_container(&container_id).await?;
-    trace!(parent: &span, "removed container");
 
     result
 }

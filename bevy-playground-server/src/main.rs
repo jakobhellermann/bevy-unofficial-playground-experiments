@@ -39,8 +39,8 @@ async fn main() {
 
     let app = Router::new()
         .nest("/api", api_routes)
-        .fallback(serve_dir)
-        .layer(TraceLayer::new_for_http());
+        .layer(TraceLayer::new_for_http())
+        .fallback(serve_dir);
 
     let addr = SocketAddr::from(([0, 0, 0, 0], 3000));
     info!("started server on http://localhost:{}", 3000);
